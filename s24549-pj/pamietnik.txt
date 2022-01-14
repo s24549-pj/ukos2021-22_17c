@@ -291,3 +291,82 @@ blokujac konsole. Zmknalem go 'CTRL+C'
 	[1]-  Running                 firefox &
 	[2]+  Running                 gedit &
 - wpisalem 'fg 2' gedit przeszedl na pierwszy plan blokujac mi konsole
+
+
+
+2022-01-14 PowerShell
+- Get-Module -ListAvailable - pojawila mi sie lista dostepnych modulow
+- Get-Module -ListAvailable | ? {$_.Version -ge "2.0.0.0"} - otzymalem liste modulow w wersji >= 2.0
+- Get-Module -ListAvailable | ? {$_.Version -ge "2.0.0.0"} | % {Get-Command -Module $_.Name} - dostalem dluga liste polecen modulow
+	w wersji >= 2.0
+- Get-Module -ListAvailable | ? {$_.Version -ge "2.0.0.0"} | % {Get-Command -Module $_.Name} | ? 
+	{($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} - lista polecen modolow  w wersji >= 2.0, zawierajaca "Get" lub "Add"
+- Get-Module -ListAvailable | ? {$_.Version -ge "2.0.0.0"} | % {Get-Command -Module $_.Name} | ? 
+	{($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} | Out-GridView - lista polecen jak powyzej ale wyswietlona w tabeli
+	w nowym oknie
+- Get-Module -ListAvailable | ? {$_.Version -ge "2.0.0.0"} | % {Get-Command -Module $_.Name} | ? 
+{($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} | Out-File $env:TEMP\mojaNazwaPliku.txt - lista z powyzszego polecenia
+	zapisana w pliku "mojaNazwaPliku.txt"
+- Get-Module -ListAvailable | ? {$_.Version -ge "2.0.0.0"} | % {Get-Command -Module $_.Name} | ? 
+	{($_.Name -like "Add-*") -or ($_.Name -like "Get-*")} | Out-Null - komenda zostala przetworzona ale nie otrzymalem zadnego
+	outputu w konsoli
+- Import-Module BitsTransfer - zaladowalem modul BitsTransfer
+- Get-Command -Module BitsTransfer - wyswietlilem wszystkie komendy w tym module
+- $job = Start-BitsTransfer -Source http://szuflandia.pjwstk.edu.pl/pub/repo/java/lubuntu_13_04_v02.zip -Destination 
+	D:\ -Credential $cred -Authentication Negotiate -Asynchronous -DisplayName "Moj Bits Transfer" - pobieram obraz VM  do Javy tak
+	zeby nie blokowac konsoli
+- Get-BitsTransfer - sprawdzam status pobierania - niestety nie pokazuje jaka czesc pliku zostala pobrana
+- Complete-BitsTransfer -BitsJob $job - zakonczylem proces pobierania
+- Measure-Command {Get-ChildItem -Path C:\Windows} - zmierzylem czas wykonania komendy (30.393 ms)
+- Get-Alias | ? {$_.Definition -like "Get-ChildItem"} - znalazlem znajomy alias na "Get-ChildItem" = "ls"
+- ls C:\ | %{Sleep -Milliseconds 250; return $_} | Format-Table - wylistowalem zawartosc katalogu C:\ (w odstepach 250ms)
+- & C:\Windows\notepad.exe - "call" = "&" - uruchomilem Notepad
+
+1. Rejestr
+- Get-PSDrive - wylistowalem dyski dostepne dla PS, wiecej niz sie spodziewalem
+- cd hklm:\ - wszedlem do rejestru
+- cd .\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall
+- ls - wylistowala mi sie zawartosc rejestru, bardzo dluga lista
+- ls | %{Get-ItemProperty $_.pspath | Select-Object DisplayName, InstallDate, UninstallString} | Format-Table -AutoSize - ta sama lista
+	w duzo czytelniejszej formie, w postaci tabeli
+- #ls | %{Get-ItemProperty $_.pspath | Select-Object DisplayName, InstallDate, UninstallString} | %{& $_.UninstallString} - nie uruchomilem
+	nie chce odinstalowac sobie aplikacji
+
+2. WMI
+- Get-WmiObject -Class Win32_Product | Format-Table -AutoSize - bardzo długo czekalem na wylistowanie
+- Get-WmiObject -Class Win32_Product | Select-Object Name, Vendor | Format-Table -AutoSize - zdecydowanie bardziej przejrzysta 
+	tabela aplikacji
+- Get-WmiObject -Class Win32_Product | ?{$_.Vendor.toLower() -like "*microsoft*"} | Select-Object Name, Vendor | Format-Table -AutoSize
+	- wszystkie aplikacje od Microsoftu w przejrzystej tabeli
+- ponownie nie wykonuje komendy z odinstalowaniem wszystkich aplikacji Microsoftu
+
+Dyski w PS
+- Get-PSDrive - wylistowalem wszystkie dyski w PS
+
+Name           Used (GB)     Free (GB) Provider      Root
+----           ---------     --------- --------      ----
+Alias                                  Alias
+C                 160.82         39.18 FileSystem    C:\
+Cert                                   Certificate   \
+D                 156.26        120.21 FileSystem    D:\
+Env                                    Environment
+Function                               Function
+HKCU                                   Registry      HKEY_CURRENT_USER
+HKLM                                   Registry      HKEY_LOCAL_MACHINE
+Variable                               Variable
+WSMan                                  WSMan
+
+- po odkomentowaniu:
+[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+
+$icoPath = Get-Process -id $pid | Select-Object -ExpandProperty Path
+
+$myNotification = New-Object System.Windows.Forms.NotifyIcon
+$myNotification.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($icoPath)
+$myNotification.BalloonTipIcon = 'Error'
+$myNotification.BalloonTipText = "Your cat has meowed!" 
+$myNotification.BalloonTipTitle = "Cat Error"
+$myNotification.Visible = $True 
+$myNotification.ShowBalloonTip(10000)
+	wyswietlil mi sie blad PS w systemie, ze moj kot zamiauczal ;p 
+
